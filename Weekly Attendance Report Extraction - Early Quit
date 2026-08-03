@@ -1,0 +1,39 @@
+# Weekly Attendance Report Extraction
+
+## Purpose
+Extracts LAT-Early Quit entries from weekly PE1-400 Absence Reports within a rolling 30-day window.
+
+## Files Required Each Week
+1. **Excel Workbook** - Contains prior weeks' data (e.g., `8-10-2026.xlsx`)
+2. **PDF Report** - The PE1-400 Absence Report for the week (e.g., `8-10-26 Full Attendance Report.PDF`)
+
+## How to Use
+1. Open your Excel workbook in Excel Online or Excel Desktop with Copilot
+2. Upload both files (the Excel workbook and the PDF report)
+3. Copy the entire prompt from `weekly-attendance-extraction.md`
+4. Paste it into the chat
+5. Wait for processing to complete
+6. Save the updated workbook for next week
+
+## Output
+- New worksheet named with report date (M-D-YY format)
+- Columns: Name, Date, Hours, Notes
+- Sorted by Date (newest first)
+- Formatted as an Excel Table with borders
+
+## Window Calculation
+- ReportRunDate = THRU date from PDF header
+- AnchorDate = ReportRunDate - 6 days
+- WindowEnd = AnchorDate
+- WindowStart = AnchorDate - 29 days
+- Total window = 30 days (inclusive)
+
+## Inclusion Criteria
+Entries are included if:
+1. Date is within the 30-day window, AND
+2. Either:
+   - Reason is "LAT-Early Quit", OR
+   - Comment explicitly mentions early quitting (e.g., "left early", "quit early")
+
+## Notes Carryforward
+Notes from the 3 previous worksheets are automatically carried forward when the same Name + Date combination exists.
