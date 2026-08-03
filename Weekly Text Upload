@@ -1,0 +1,9 @@
+Follow the Weekly LAT-Late Attendance Sheet Creation Script:
+
+1. Parse the PDF to extract LAT-Late entries within the 30-day window
+2. Create a new sheet named for the report date (M-D-YY format)
+3. Columns: Name, Date, Hours, Notes
+4. Carry forward Notes from prior 3 sheets (same Name + Date)
+5. Carry forward highlighting from prior 1 sheet (same Name + Date + Hours)
+6. Format: Excel Table, no banded rows/columns, sort Date descending, borders, bold header, center B/C, auto-size columns
+7. Validate against PDF and append any missing entries
