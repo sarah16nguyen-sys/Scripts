@@ -1,0 +1,158 @@
+# Weekly LAT-Early Quit Extraction Script
+
+## Instructions
+1. Upload both files:
+   - The Excel workbook 
+   - The PDF attendance report 
+2. Copy and paste the prompt below
+
+---
+
+## Prompt
+
+Create a worksheet named with the PDF report run date in M-D-YY format (example: 4-20-26).
+
+Parse the attached Weekly Full Attendance Report PDF (PE1-400 Absence Report).
+
+Determine the report run date from the PDF header using THIS RULE ONLY:
+- Locate the header text that reads: "FOR PERIOD <date1> THRU <date2>"
+- Set ReportRunDate = <date2> (the THRU date / later date)
+- Do NOT use <date1> (the FOR PERIOD start date)
+
+Set AnchorDate = (ReportRunDate minus 6 calendar days).
+
+Define the 30-day review window as:
+- WindowStart = (AnchorDate minus 29 calendar days) = the OLDER / EARLIER date
+- WindowEnd = AnchorDate = the NEWER / LATER date
+- The window is inclusive of BOTH start and end dates.
+
+Create the output with columns EXACTLY:
+Name
+Date
+Hours
+Notes
+
+Extraction rules (do NOT summarize):
+
+1) Employee block detection (must survive page breaks)
+- Walk the PDF in reading order from start to end, including across page breaks.
+- When you encounter an employee header line, set CurrentName to the employee name as printed (Last, First format).
+- The employee header may appear at the end of a line that also contains other header text; still treat the name as the start of a new employee block.
+- Treat everything after that name as belonging to CurrentName until the next employee name appears, EVEN if the block continues on the next page.
+
+2) Absence entry detection (IMPORTANT: entries can be packed on one line AND can wrap)
+- Do NOT assume one absence entry per line.
+- Within each employee block, scan the text token-by-token and extract every occurrence of an absence entry.
+- Primary pattern (preferred):
+  [EmployeeNumber] [Hours] [Reason] [AbsenceDate]
+  - EmployeeNumber is typically 4 digits, but accept 3–5 digits.
+  - Hours is a decimal number (accept 1, 1.0, 0.1, 12.0, etc.).
+  - Reason is a token like LAT-Early Quit, LAT-Personal, etc.
+  - AbsenceDate MUST be the first token after Reason that matches a real calendar date in MM/DD/YYYY format.
+  - Capture ONLY a token containing two slashes in MM/DD/YYYY format as AbsenceDate.
+  - NEVER use EmployeeNumber, Hours, Total Hours Percentage, page numbers, H-codes, or any other numeric token as the Date.
+  - If the token after Reason is not a valid MM/DD/YYYY date, continue scanning forward within the same occurrence until the first valid MM/DD/YYYY date is found; if none is found before the next valid entry pattern, next employee header, or report/footer text, discard that occurrence.
+  - A free-text comment MAY appear immediately after the AbsenceDate and may include spaces.
+  - Capture the full free-text comment, if present, up to but not including the next valid entry pattern, the next employee header, or report/footer text.
+  - Do NOT let comment words interfere with finding the next occurrence.
+- Wrapped/continuation recovery rule (to prevent missed entries):
+  - Sometimes the PDF wraps so that an entry continues without repeating the EmployeeNumber on the next line.
+  - If you see a token sequence that matches:
+    [Hours] [Reason] [AbsenceDate]
+   and you have a MostRecentEmployeeNumber already seen within the CURRENT employee block, then treat it as a valid entry using that MostRecentEmployeeNumber.
+  - In this recovery pattern, AbsenceDate still MUST be a real MM/DD/YYYY token and must never be inferred from any other number.
+  - Update MostRecentEmployeeNumber every time you successfully parse a [EmployeeNumber] [Hours] [Reason] [AbsenceDate] pattern.
+
+3) Date capture guardrails (MANDATORY)
+- Before writing any output row, validate that Date exactly matches MM/DD/YYYY and parses to a real calendar date.
+- If the captured value does not contain two slashes or does not parse as a real date, reject that occurrence and continue scanning.
+- Prefer the date token nearest to the Reason within the same occurrence; do not borrow a date from totals, headers, footers, or neighboring entries.
+- If multiple numbers appear near an entry, the only value eligible for Date is the valid MM/DD/YYYY token associated with that same occurrence.
+
+4) Exclusions (do not treat as entries)
+- Ignore any "Total" / "Total hours worked" / "Overtime hours worked" / "Total Hours Percentage" text and any values that follow those labels unless they are part of a valid entry pattern above.
+- Ignore report headers/footers such as "ZATTENDANCE_USWA", "PE1-400 ABSENCE REPORT", page numbers, timestamps, and H### codes unless they are part of a valid entry pattern.
+
+5) Inclusion rules
+- Normalize Reason BEFORE any date/window checks using this normalization procedure:
+  a) Trim leading/trailing spaces
+  b) Collapse any internal multiple spaces to a single space
+  c) Treat these as equivalent separators between LAT and Early Quit, and between Early and Quit: "-", " - ", "_", "/" (normalize them all to a single space first, then standardize the final target to "LAT-Early Quit")
+  d) Compare case-insensitively
+- After normalization, treat ONLY the exact target value "LAT-Early Quit" as a direct reason match.
+- Also normalize CommentText, if present, by trimming, collapsing spaces, converting to lowercase, and treating punctuation/separators consistently so explicit phrases like "early quit", "left early", "quit early", "went home early", and "early leave" can be detected reliably.
+- Include an extracted occurrence ONLY if:
+  AbsenceDate is within WindowStart through WindowEnd (inclusive).
+  AND one of the following is true:
+    (1) NormalizedReason equals "LAT-Early Quit"
+    OR (2) the associated CommentText explicitly states that the employee left early, including phrases such as "left early", "quit early", "went home early", "early leave", or "early quit"
+- Entries with comments after the date MUST still be included if they meet the rules above.
+- Do NOT include entries whose reason/comment do not explicitly indicate early quitting.
+- Discard any occurrence outside the window even if the reason or comment matches.
+
+6) Notes carryforward from prior sheets
+- Add the Notes column to the new worksheet even if some rows do not have an existing note.
+- After creating the new worksheet, search the three worksheets immediately before it.
+- For each row on the new worksheet, look for a matching prior row using the same employee Name and the same Date.
+- Search starting with the closest previous tab, then the next closest, then the third closest, and stop at the FIRST populated note found.
+- If a matching row is found and the Notes cell on that prior sheet contains a note, copy that most recent prior note into the Notes column on the new sheet.
+- If no prior note exists for that Name + Date match, leave the Notes cell blank.
+
+Sanity checks (weekly, no hard-coded examples):
+- Confirm every output Date is within WindowStart..WindowEnd (inclusive). If any are outside the window, STOP and fix parsing/window logic.
+- Confirm every output Date is an actual MM/DD/YYYY date taken from the entry itself and not any other numeric field. If any row contains a non-date number or unrelated value in the Date column, STOP and fix date parsing logic.
+- Confirm every output row is supported by either a Reason that normalizes to "LAT-Early Quit" or a comment that explicitly indicates early quitting. If any other reason appears without a matching early-quit comment, STOP and fix the filter.
+- Spot-check accuracy: randomly select at least 3 output rows (or all rows if fewer than 3) and locate each one in the PDF to confirm Name, Date, Hours, and the early-quit basis (Reason and/or CommentText) match, and verify any copied Notes came from the nearest prior sheet with a populated matching note.
+- Completeness check: if the PDF contains ANY in-window occurrences that are either coded as "LAT-Early Quit" or have comments explicitly indicating early quitting, the output must not be empty. If output is empty but the PDF contains matches, rerun using token-by-token scanning (not line-based) and ensure continuation recovery is enabled.
+
+7) Output rows
+- For every included occurrence, append ONE output row:
+  Name  = CurrentName
+  Date  = AbsenceDate exactly as printed
+  Hours = Hours exactly as printed
+  Notes = copied prior-sheet note for the same Name + Date if found; otherwise blank
+
+Materialize Hours as a NUMBER (no formulas, no references).
+Do not output any totals rows.
+Do not output employees with zero included occurrences.
+
+LAST-RESORT DATE GUARDRAIL (MANDATORY):
+After calculating WindowStart and WindowEnd:
+- If ANY candidate AbsenceDate is MORE THAN 45 calendar days older than ReportRunDate,
+  DISCARD and IGNORE that occurrence regardless of reason/comment.
+- If WindowStart resolves to a date MORE THAN 45 calendar days prior to ReportRunDate,
+  STOP extraction and use this corrected window instead:
+    WindowEnd   = ReportRunDate minus 6 calendar days
+    WindowStart = WindowEnd minus 29 calendar days
+- Do NOT include any absence date later than WindowEnd under any circumstances.
+
+This guardrail OVERRIDES all other inclusion logic if a conflict is detected.
+
+---
+
+After extraction is complete, format the worksheet:
+
+1. Convert the contiguous data range into an Excel Table.
+2. Apply a table style with:
+   - NO fill
+   - NO banded rows
+   - NO banded columns
+3. Sort the Table by Date column from HIGHEST to LOWEST.
+4. Apply borders to ALL table cells.
+5. Bold the header row.
+6. Center Columns B and C.
+7. Auto-size all columns to fit the text in each cell.
+
+---
+
+After formatting, validate and repair:
+
+1. Confirm the worksheet has EXACTLY four columns: Name, Date, Hours, Notes
+2. Confirm all Date values are valid calendar dates
+3. Confirm all Hours values are numeric
+4. Re-parse the PDF and compare to the worksheet
+5. If any entries are missing, APPEND them at the bottom
+6. Flag any unmatched entries (in worksheet but not in PDF) but do NOT delete them
+7. Report validation results
+
+Do NOT explain during execution - just execute and report the final summary.
