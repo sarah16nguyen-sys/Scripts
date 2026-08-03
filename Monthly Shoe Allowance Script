@@ -1,0 +1,10 @@
+Run the monthly shoe allowance script.
+
+Pull data from the attached Safety Shoe Allowance file, sheet "USW 25-26".
+- Use the date in F1 to determine the month column
+- Pull all rows that have a value in that month's column
+- Column A (Clock): 4-digit number from source column A
+- Column C (Amount): Value from month column, capped at $200
+- Column E (Name): Transform from "LAST, FIRST MI" to "FIRST LAST" all caps, no middle initial
+- Column H (U number): 5-digit number from source column B
+- Start entering data at row 3  
