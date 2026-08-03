@@ -1,0 +1,37 @@
+## SCRIPT 1: Extract Employee Data from PDF
+
+**Purpose:** Parse the attendance PDF and extract employees at or above the threshold percentage.
+
+**Input:** PE1-400 Attendance Report PDF  
+**Output:** List of employees with Name, Total %, and Last Call Off Date
+
+```javascript
+// PDF Parsing Script (run in Python or Node.js environment)
+// This extracts employee data from the PE1-400 format PDF
+
+/*
+PDF FORMAT STRUCTURE:
+- Each employee section contains:
+  - Employee name with ID number (e.g., "Pawlikowski, Michael A    3368")
+  - Multiple attendance entry rows with: ID, hours, absence type, date, optional comments
+  - Summary block: "Total [hours]", "Total hours worked [hours]", "Overtime hours worked [hours]", "Total Hours Percentage [X.X]"
+  
+KEY EXTRACTION RULES:
+1. Employee name pattern: Name followed by 4-digit ID
+2. Last Call Off Date: The LAST date entry BEFORE the "Total" line
+3. Total Hours Percentage: The X.X value after "Total Hours Percentage"
+*/
+
+// Name regex pattern (handles McNames, hyphenated names like Quinn-Piper, suffixes like Jr., III)
+const namePattern = /([A-Z][a-zA-Z\'\-]+(?:,\s+(?:Jr\.|III|II|IV))?(?:,\s+[A-Z][a-zA-Z\'\-]+(?:\s+[A-Z])?)+)\s+\d{4}\s+[\d.]+/g;
+
+// Date pattern
+const datePattern = /(\d{2}\/\d{2}\/\d{4})/g;
+
+// Percentage pattern
+const percentagePattern = /Total Hours Percentage\s+([\d.]+)/g;
+
+// PARSING APPROACH:
+// 1. Split PDF content by "Total Hours Percentage X.X" markers
+// 2. For each section, extract employee name, find LAST date, get percentage
+// 3. Filter to threshold (typically 2.5%
