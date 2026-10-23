@@ -1,0 +1,23 @@
+Pull the absence information for BLANK from the HR Sortable View sheet in the currently open workbook.
+
+Use these columns:
+
+Employee Name
+Clock #
+U#
+Weekly Summary Worked Hours
+Absence Hours
+Calculated Absence Rate
+Determine the latest completed ending week from the snapshot description in HR Sortable View!A2. Set the Review Date as the following day.
+
+Format exactly as:
+
+[Employee Name]
+Clock #: [Clock #]
+U#: [U#]
+Review Date: [MM/DD/YYYY]
+Total Worked Hours: [0,000.00]
+Total Absence Hours: [0,000.00]
+Calculated Absence Rate: [0.00%]
+
+Show the rate to two decimal places using Absence Hours ÷ Worked Hours. Respond only in chat and do not modify the workbook.
