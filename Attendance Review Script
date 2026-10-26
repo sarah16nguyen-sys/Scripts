@@ -12,13 +12,13 @@ Determine the latest completed ending week from the snapshot description in HR S
 
 Format exactly as:
 
-[Employee Name]
+[Employee Name][bolded]
 Clock #: [Clock #]
 U#: [U#]
 Review Date: [MM/DD/YYYY]
 
 Total Worked Hours: [0,000.00]
 Total Absence Hours: [0,000.00]
-Calculated Absence Rate: [0.00%]
+[Bolded] Calculated Absence Rate: [0.00%]
 
 Show the rate to two decimal places using Absence Hours ÷ Worked Hours. Respond only in chat and do not modify the workbook.
