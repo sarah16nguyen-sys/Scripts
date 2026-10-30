@@ -1,6 +1,6 @@
 Run the monthly shoe allowance script.
 
-Pull data from the attached Safety Shoe Allowance file, sheet "USW 25-26".
+Pull data from the attached Safety Shoe Allowance file, sheet "USW 26-27".
 - Use the date in F1 to determine the month column
 - Pull all rows that have a value in that month's column
 - Column A (Clock): 4-digit number from source column A
