@@ -1,0 +1,25 @@
+Reconcile the Call Off Detail sheet with the attached weekly “USW Absence Yearly Data Detail” report.
+
+Rules:
+1. Preserve every Call Off Detail record dated before 09/16/2026.
+2. Treat the attached report as the complete authoritative source for 09/16/2026 through the report ending date.
+3. Replace—not append—the entire 09/16/2026-and-later period.
+4. Import:
+   - Name
+   - U#
+   - Actual Hours
+   - Date
+   - Paycode Name
+   - Comments
+5. Remove “LAT-” from paycodes. Add nonblank comments to the reason using “ — ”.
+6. Convert U# to Clock # using Weekly Absence Totals.
+7. Use Employee Roster names where the identity is unambiguous.
+8. Exception: Devan Kuzemczak, U# 54555, is Clock # 4436. Keep the name “Kuzemczak, Devan M.”
+9. Remove records no longer present in the newest report and apply all corrected dates, hours, and reasons.
+10. Keep tblCallOffDetail resized to the final data.
+11. Sort by Date of Call Off, then Employee Name.
+12. Format Hours as 0.0 and dates as mm/dd/yyyy.
+13. Verify:
+    - All pre-09/16/2026 rows are unchanged.
+    - Every source row matches the final 09/16/2026-and-later data exactly, including duplicates.
+    - Report final row count, current-system row count, date range, total hours, additions/removals/corrections, and any unresolved employees.
