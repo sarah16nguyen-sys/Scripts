@@ -1,6 +1,6 @@
 Pull the absence information for BLANK from the "HR Sortable View" worksheet in the currently open workbook.
 
-Use the row where the Employee Name exactly matches "BLANK". If no exact match is found, respond:
+Use the row where the Employee Name exactly matches the name listed above. If no exact match is found, respond:
 Employee not found in HR Sortable View.
 
 Retrieve the following columns:
