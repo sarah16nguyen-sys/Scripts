@@ -1,0 +1,40 @@
+Pull the absence information for BLANK from the "HR Sortable View" worksheet in the currently open workbook.
+
+Use the row where the Employee Name exactly matches "BLANK". If no exact match is found, respond:
+Employee not found in HR Sortable View.
+
+Retrieve the following columns:
+- Employee Name
+- Clock #
+- U#
+- Weekly Summary Worked Hours
+- Absence Hours
+- Calculated Absence Rate
+
+Determine the latest fully completed week-ending date stated in the snapshot description in cell HR Sortable View!A2. Set the Review Date to the calendar day immediately following that week-ending date.
+
+Calculate the absence rate directly as:
+Absence Hours ÷ Weekly Summary Worked Hours
+
+Do not use the displayed value from the Calculated Absence Rate column unless it matches the calculation above.
+
+If Weekly Summary Worked Hours is zero, display the Calculated Absence Rate as N/A rather than dividing by zero.
+
+Respond using exactly this format, including the blank lines:
+
+**[Employee Name]**
+Clock #: [Clock #]
+U#: [U#]
+Review Date: [MM/DD/YYYY]
+
+Total Worked Hours: [0,000.00]
+Total Absence Hours: [0,000.00]
+**Calculated Absence Rate: [0.00%]**
+
+Formatting requirements:
+- Replace BLANK with the employee’s full name before running the request.
+- Display worked hours and absence hours with commas and exactly two decimal places.
+- Display the calculated absence rate as a percentage with exactly two decimal places.
+- Do not add explanations, headings, notes, source information, or additional text.
+- Respond only in chat.
+- Do not modify, format, filter, sort, or save the workbook.
