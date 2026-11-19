@@ -1,9 +1,9 @@
 Reconcile the Call Off Detail sheet with the attached weekly “USW Absence Yearly Data Detail” report.
 
 Rules:
-1. Preserve every Call Off Detail record dated before 09/16/2026.
-2. Treat the attached report as the complete authoritative source for 09/16/2026 through the report ending date.
-3. Replace—not append—the entire 09/16/2026-and-later period.
+1. Preserve every Call Off Detail record dated before 09/14/2026.
+2. Treat the attached report as the complete authoritative source for 09/14/2026 through the report ending date.
+3. Replace—not append—the entire 09/14/2026-and-later period.
 4. Import:
    - Name
    - U#
@@ -20,6 +20,6 @@ Rules:
 11. Sort by Date of Call Off, then Employee Name.
 12. Format Hours as 0.0 and dates as mm/dd/yyyy.
 13. Verify:
-    - All pre-09/16/2026 rows are unchanged.
-    - Every source row matches the final 09/16/2026-and-later data exactly, including duplicates.
+    - All pre-09/14/2026 rows are unchanged.
+    - Every source row matches the final 09/14/2026-and-later data exactly, including duplicates.
     - Report final row count, current-system row count, date range, total hours, additions/removals/corrections, and any unresolved employees.
