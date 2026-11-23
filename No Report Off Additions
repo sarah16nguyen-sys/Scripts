@@ -1,0 +1,12 @@
+Update the NRO sheet using the attached Dynamet report and seniority roster.
+
+• Add only new records. A duplicate is the same employee, date, and paycode. Skip duplicates even if the report’s ID differs.
+• Use CLOCK # from the seniority roster for the Clock # column—not the report’s ID. Match by first and last name, allowing for middle initials.
+• Import Name, Clock #, Cost Center, Date, Paycode Name, and Hours into the existing columns.
+• Read the actual hours. If they appear blank, inspect the underlying formulas, such as =ROUND(1.7,2.0). Do not treat missing hours as zero or guess them.
+• Preserve all existing records, hours, comments, and formatting. Leave Comments blank for new records.
+• Keep separate occurrences for the same employee on different dates.
+• If a clock-number match is missing or ambiguous, or hours cannot be read, ask me before adding that record.
+• Append new records below the existing list, format dates consistently, and show hours to two decimal places.
+
+Make the changes directly in this workbook. When finished, tell me how many records were added, how many duplicates were skipped, and whether anything needs review.
