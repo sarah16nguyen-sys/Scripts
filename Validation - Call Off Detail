@@ -1,0 +1,116 @@
+"""
+validate_calloff.py
+
+Validates the 'Call Off Detail' sheet of the Union Weekly Absence tracker
+against a UKG "Absence Yearly Data Detail" report export.
+
+Usage:
+    python validate_calloff.py <tracker.xlsx> <ukg_report.xlsx>
+
+Example:
+    python validate_calloff.py "Union Weekly Absence FY27.xlsx" "11-22-26 Absence Yearly Data Detail.xlsx"
+
+Requires:
+    pip install openpyxl
+
+Checks:
+    - Every report row (U#, date, hours, reason) appears in the tracker the same
+      number of times (duplicates included), and the tracker has no extra rows
+      on or after the cutoff date.
+    - Row counts, date ranges, and total hours.
+    - No reasons still contain the 'LAT-' prefix.
+    - Sheet is sorted by Date of Call Off, then Employee Name.
+
+Exit code: 0 on PASS, 1 on FAIL.
+"""
+import sys
+import datetime as dt
+from collections import Counter
+
+import openpyxl
+
+SHEET = "Call Off Detail"
+CUTOFF = dt.date(2026, 9, 14) # report is authoritative from this date forward
+DASH = " \u2014 " # separator between paycode and comment
+
+
+def to_date(v):
+    if isinstance(v, dt.datetime):
+        return v.date()
+    if isinstance(v, dt.date):
+        return v
+    return dt.datetime.strptime(str(v).strip(), "%m/%d/%Y").date()
+
+
+def load_report(path):
+    ws = openpyxl.load_workbook(path, data_only=True).active
+    hdr = next(r for r in ws.iter_rows(min_row=1, max_row=20) if r[0].value == "Name")
+    col = {c.value: c.column - 1 for c in hdr if c.value}
+    out = []
+    for r in ws.iter_rows(min_row=hdr[0].row + 1, values_only=True):
+        if not r[col["Name"]] or r[col["Date"]] is None:
+            continue
+        pay = str(r[col["Paycode Name"]]).replace("LAT-", "", 1).strip()
+        cmt = str(r[col["Comments"]] or "").strip()
+        reason = pay + (DASH + cmt if cmt else "")
+        out.append((
+            int(r[col["U#"]]),
+            to_date(r[col["Date"]]),
+            round(float(r[col["Actual Hours"]]), 1),
+            reason,
+            r[col["Name"]],
+        ))
+    return out
+
+
+def load_tracker(path):
+    ws = openpyxl.load_workbook(path, data_only=True)[SHEET]
+    return [r for r in ws.iter_rows(min_row=2, max_col=6, values_only=True) if r[0]]
+
+
+def main():
+    if len(sys.argv)!= 3:
+        print(__doc__)
+        sys.exit(2)
+    tracker_path, report_path = sys.argv[1], sys.argv[2]
+
+    src = load_report(report_path)
+    rows = load_tracker(tracker_path)
+
+    post = [
+        (int(r[5]), to_date(r[4]), round(float(r[3]), 1), str(r[2]).strip(), r[0])
+        for r in rows if to_date(r[4]) >= CUTOFF
+    ]
+    pre_count = sum(1 for r in rows if to_date(r[4]) < CUTOFF)
+
+    key = lambda t: t[:4] # (U#, date, hours, reason)
+    s_cnt, t_cnt = Counter(map(key, src)), Counter(map(key, post))
+    missing, extra = s_cnt - t_cnt, t_cnt - s_cnt
+
+    print(f"Report rows: {len(src)}")
+    print(f"Tracker rows >= {CUTOFF}: {len(post)}")
+    print(f"Tracker rows before cutoff: {pre_count} (not compared)")
+    print(f"Report date range: {min(k[1] for k in s_cnt)} to {max(k[1] for k in s_cnt)}")
+    print(f"Tracker date range: {min(k[1] for k in t_cnt)} to {max(k[1] for k in t_cnt)}")
+    print(f"Report hours / Tracker hrs: {sum(k[2] for k in src):.1f} / {sum(k[2] for k in post):.1f}")
+    print(f"Missing from tracker: {sum(missing.values())}")
+    print(f"Extra in tracker: {sum(extra.values())}")
+
+    for label, d in (("MISSING", missing), ("EXTRA", extra)):
+        for k, n in sorted(d.items(), key=lambda x: (x[0][1], x[0][0])):
+            print(f" {label} x{n}: U#{k[0]} {k[1]:%m/%d/%Y} {k[2]} hrs {k[3]}")
+
+    lat_left = [r for r in rows if "LAT-" in str(r[2])]
+    print(f"Reasons still containing 'LAT-': {len(lat_left)}")
+
+    order = [(to_date(r[4]), str(r[0]).lower()) for r in rows]
+    is_sorted = order == sorted(order)
+    print(f"Sorted by date then name: {is_sorted}")
+
+    ok = not missing and not extra and not lat_left and is_sorted
+    print("Result:", "PASS" if ok else "FAIL")
+    sys.exit(0 if ok else 1)
+
+
+if __name__ == "__main__":
+    main()
