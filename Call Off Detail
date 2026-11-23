@@ -1,9 +1,9 @@
-Reconcile the Call Off Detail sheet with the attached weekly “USW Absence Yearly Data Detail” report.
+Reconcile the Call Off Detail sheet with the attached weekly "USW Absence Yearly Data Detail" report.
 
 Rules:
 1. Preserve every Call Off Detail record dated before 09/14/2026.
 2. Treat the attached report as the complete authoritative source for 09/14/2026 through the report ending date.
-3. Replace—not append—the entire 09/14/2026-and-later period.
+3. Replace, not append, the entire 09/14/2026-and-later period.
 4. Import:
    - Name
    - U#
@@ -11,15 +11,28 @@ Rules:
    - Date
    - Paycode Name
    - Comments
-5. Remove “LAT-” from paycodes. Add nonblank comments to the reason using “ — ”.
-6. Convert U# to Clock # using Weekly Absence Totals.
-7. Use Employee Roster names where the identity is unambiguous.
-8. Exception: Devan Kuzemczak, U# 54555, is Clock # 4436. Keep the name “Kuzemczak, Devan M.”
-9. Remove records no longer present in the newest report and apply all corrected dates, hours, and reasons.
+   The report Name is a fallback only; the final name comes from the Employee Roster (see rule 7).
+5. Remove "LAT-" from paycodes. Add nonblank comments to the reason using " — ".
+6. Convert U# to Clock # using this lookup order:
+   a. Weekly Absence Totals
+   b. Prior Call Off Detail history
+   c. If still not found, flag the employee as unresolved.
+   Never leave Clock # blank without flagging it.
+7. Use Employee Roster names (proper case, keep suffixes such as Jr/II/III) when exactly one roster row exists for the Clock #. Otherwise keep the report name and list the employee as unresolved.
+8. Exception: Devan Kuzemczak, U# 54555, is Clock # 4436. Keep the name "Kuzemczak, Devan M."
+9. Remove records no longer present in the newest report and apply all corrected dates, hours, and reasons. Classify old versus new rows using this matching logic, in order:
+   a. Exact match on Clock #, Date, Hours and Reason = unchanged.
+   b. Clock # + Date + Hours match, Reason differs = reason correction.
+   c. Clock # + Date + Reason match, Hours differ = hours correction.
+   d. Clock # + Hours + Reason match, Date differs = date correction.
+   e. Unmatched old rows = removals; unmatched new rows = additions.
+   Match duplicates one-to-one.
 10. Keep tblCallOffDetail resized to the final data.
-11. Sort by Date of Call Off, then Employee Name.
-12. Format Hours as 0.0 and dates as mm/dd/yyyy.
-13. Verify:
-    - All pre-09/14/2026 rows are unchanged.
-    - Every source row matches the final 09/14/2026-and-later data exactly, including duplicates.
-    - Report final row count, current-system row count, date range, total hours, additions/removals/corrections, and any unresolved employees.
+11. Sort by Date of Call Off, then Employee Name, then Hours (descending), then Reason.
+12. Format Hours as 0.0 and dates as mm/dd/yyyy. Wrap Reason text and autofit row heights so all text is visible.
+13. Do all steps in one pass.
+14. Write a "Reconciliation Log" sheet listing each addition, removal and correction (Clock #, Name, Date, Hours, Reason, Change type, and old values for corrections).
+15. Verify:
+    - All pre-09/14/2026 rows are unchanged (compare every column).
+    - Every report row matches the final 09/14/2026-and-later data exactly on Name, Clock #, Reason, Hours, Date and U#, including duplicates.
+    - Report: final row count, current-system row count before the update, date range, total hours, additions/removals/corrections, any U# resolved through fallback, and any unresolved employees.
